@@ -55,6 +55,25 @@ def modo_multijugador():
 def modo_maquina():
     pass
 
+#Mostrar el tablero
+def mostrar_tablero():
+    tablero = [["" for _ in range(4)] for _ in range(4)]
+    for fila in tablero:
+        print(fila)
+    print()
+
+
+#Modo de juegos
+def manejar_modo(modo):
+    print("Probando")
+    if modo == 1:
+        print("Vista 1: Modo Normal")
+    elif modo == 2:
+        print("Vista 2: Modo Jugador vs Jugador")
+    elif modo == 3:
+        print("Vista 3: Modo Jugador vs Máquina")
+    mostrar_tablero()
+
 def mostrar_menu():
     ventana = tk.Tk()
     ventana.geometry("300x200")
@@ -62,9 +81,9 @@ def mostrar_menu():
 
     tk.Label(ventana, text="Seleccione un modo de juego:").pack(pady=10)
 
-    tk.Button(ventana, text="1 Jugador", command=modo_individual).pack(pady=5)
-    tk.Button(ventana, text="Jugador vs Jugador", command=modo_multijugador).pack(pady=5)
-    tk.Button(ventana, text="Jugador vs Maquina", command=modo_maquina).pack(pady=5)
+    tk.Button(ventana, text="1 Jugador", command=lambda: manejar_modo(1)).pack(pady=5)
+    tk.Button(ventana, text="Jugador vs Jugador", command=lambda: manejar_modo(2)).pack(pady=5)
+    tk.Button(ventana, text="Jugador vs Maquina", command=lambda: manejar_modo(3)).pack(pady=5)
 
     ventana.mainloop()
 
