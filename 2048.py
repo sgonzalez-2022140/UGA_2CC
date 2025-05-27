@@ -41,6 +41,7 @@
 """
 # Importaciones
 import tkinter as tk
+import random
 
 def inciar_juego():
     pass
@@ -55,12 +56,29 @@ def modo_multijugador():
 def modo_maquina():
     pass
 
+def generar_tablero_inicial():
+    tablero = [["" for _ in range(4)] for _ in range(4)]
+    
+    # Elección del 1er numero entre 2 y 4
+    i1, j1 = random.randint(0, 3), random.randint(0, 3)
+    tablero[i1][j1] = random.choice([2, 4])
+
+    # Elección del 2do numero con posición diferente
+    while True:
+        i2, j2 = random.randint(0, 3), random.randint(0, 3)
+        if (i2, j2) != (i1, j1):
+            tablero[i2][j2] = random.choice([2, 4])
+            break
+
+    return tablero
+
 #Mostrar el tablero
 def mostrar_tablero():
-    tablero = [["" for _ in range(4)] for _ in range(4)]
+    tablero = generar_tablero_inicial()
     for fila in tablero:
         print(fila)
     print()
+
 
 
 #Modo de juegos
