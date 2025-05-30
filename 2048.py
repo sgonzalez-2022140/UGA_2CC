@@ -165,11 +165,16 @@ def mov_abajo(fila1, fila2, fila3, fila4):
     return movimiento
 
 def validacion_movimientos(cond1,cond2,mov):
+    pro = False
     if cond1 == True or cond2 == True:
         mov = mov + 1
+        pro = True
+    vacias(tablero,mov)
+    if pro == True:
+        aparicion(tablero)
     return mov
 
-def vacias(tablero):
+def vacias(tablero,mov):
     lista = []
     vacias = 0
     for c in range(4):
@@ -178,9 +183,20 @@ def vacias(tablero):
                 vacias = vacias+1
             elif tablero[c][a] != "":
                 lista.append(tablero[c][a])
+            elif tablero[c][a] == 2048:
+                print("Juego terminado")
+                print("Movimientos Totales: ", mov)
+                print("Número mayor obtenido: ", lista)
+                mostrar_menu()
     mayor = max(lista)
+    if vacias == 0:
+        print("Juego terminado")
+        print("Movimientos Totales: ", mov-1)
+        print("Número mayor obtenido: ", mayor)
+        mostrar_menu()
+    print("Movimiento # " ,mov)
     print("Número mayor: ", mayor)
-    print("Casillas vacías: ", vacias)
+    print("Casillas vacías: ", vacias) 
     
 def aparicion(tablero):
     while True:
@@ -200,26 +216,21 @@ def teclas():
             cond1 = mov_izquierda(tablero)
             cond2 = sumas_columnas(tablero)
             mov_izquierda(tablero)
-            mov = validacion_movimientos(cond1,cond2,mov)
         elif tecla == "d":
             cond1 = mov_derecha(tablero)
             cond2 = sumas_columnas(tablero)
             mov_derecha(tablero)
-            mov = validacion_movimientos(cond1,cond2,mov)
         elif tecla == "w":
             cond1 = mov_arriba(fila1, fila2, fila3, fila4)
             cond2 = sumas_filas(fila1, fila2, fila3, fila4)
             mov_arriba(fila1, fila2, fila3, fila4)
-            mov = validacion_movimientos(cond1,cond2,mov)
         elif tecla == "s":
             cond1 = mov_abajo(fila1, fila2, fila3, fila4)
             cond2 = sumas_filas(fila1, fila2, fila3, fila4)
             mov_abajo(fila1, fila2, fila3, fila4)
-            mov = validacion_movimientos(cond1,cond2,mov)
-        print("Movimiento # " ,mov)
-        aparicion(tablero)
+
+        mov = validacion_movimientos(cond1,cond2,mov)
         mostrar_tablero(tablero)
-        vacias(tablero)
 
 def modo_individual():
     generar_tablero_inicial()
