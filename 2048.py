@@ -39,7 +39,6 @@
     - Botón de Ayuda: Mostrar instrucciones del juego
     - Opcion de retroceso (Undo)
 """
-# Importaciones
 import tkinter as tk
 import random
 
@@ -76,82 +75,129 @@ def mostrar_tablero(tablero, posiciones_iniciales=None, posicion_actual=None):
 
 
 def sumas_filas(fila1, fila2, fila3, fila4):
+    movimiento = False
     for c in range(len(fila1)):
         if fila1[c] == fila2[c] and fila1[c] != "":
             fila1[c] += fila2[c]
             fila2[c] = ""
+            movimiento = True
     for a in range(len(fila2)):
         if fila2[a] == fila3[a] and fila2[a] != "":
             fila2[a] += fila3[a]
             fila3[a] = ""
+            movimiento = True
     for z in range(len(fila4)):
         if fila3[z] == fila4[z] and fila3[z] != "":
             fila3[z] += fila4[z]
             fila4[z] = ""
-    for c in range(4):
-        if fila4[c]== fila1[c] and fila3[c]== "" and fila2[c] == "":
-            fila4[c] += fila1[c]
-            fila1[c] = ""
-        if fila4[c]== fila2[c] and fila3[c]== "":
-            fila4[c] += fila2[c]
-            fila2[c] = ""
-        if fila1[c]== fila3[c] and fila2[c]== "":
-            fila3[c] += fila1[c]
-            fila1[c] = ""
+            movimiento = True
+    return movimiento
 
 def sumas_columnas(matriz):
+    movimiento = False
     for f in range(4):
         for c in range(3):
             if matriz[f][c] == matriz[f][c+1] and matriz[f][c] != "":
-                matriz[f][c+1] += matriz[f][c]
-                matriz[f][c] = ""
-    for f in range(4):
-        if matriz[f][0]== matriz[f][3] and matriz[f][2]== "" and matriz[f][1] == "":
-            matriz[f][3] += matriz[f][0]
-            matriz[f][0] = ""
-        if matriz[f][0]== matriz[f][2] and matriz[f][1]== "":
-            matriz[f][2] += matriz[f][0]
-            matriz[f][0] = ""
-        if matriz[f][1]== matriz[f][3] and matriz[f][2]== "":
-            matriz[f][3] += matriz[f][1]
-            matriz[f][1] = ""
+                matriz[f][c] += matriz[f][c+1]
+                matriz[f][c+1] = ""
+                movimiento = True
+    return movimiento
+    
 
 def mov_izquierda(tablero):
+    movimiento = False
     for _ in range(4):
         for f in range(4):
             for c in range(3):
                 if tablero[f][c] == "":
+                    if tablero[f][c+1] !="":
+                        movimiento = True
                     tablero[f][c] = tablero[f][c+1]
                     tablero[f][c+1] = ""
+    return movimiento
 
 def mov_derecha(tablero):
+    movimiento = False
     for _ in range(4):
         for f in range(4):
             for c in reversed(range(1, 4)):
                 if tablero[f][c] == "":
+                    if tablero[f][c-1] !="":
+                        movimiento = True
                     tablero[f][c] = tablero[f][c-1]
                     tablero[f][c-1] = ""
+    return movimiento
 
 def mov_arriba(fila1, fila2, fila3, fila4):
+    movimiento = False
     for _ in range(4):
         for r in range(4):
             if fila1[r] == "":
+                if fila2[r] !="":
+                    movimiento = True
                 fila1[r], fila2[r] = fila2[r], ""
             if fila2[r] == "":
+                if fila3[r] !="":
+                    movimiento = True
                 fila2[r], fila3[r] = fila3[r], ""
             if fila3[r] == "":
+                if fila4[r]!="":
+                    movimiento = True
                 fila3[r], fila4[r] = fila4[r], ""
-
+    return movimiento
+    
 def mov_abajo(fila1, fila2, fila3, fila4):
+    movimiento = False
     for _ in range(4):
         for r in range(4):
             if fila4[r] == "":
+                if fila3[r]!="":
+                    movimiento = True
                 fila4[r], fila3[r] = fila3[r], ""
             if fila3[r] == "":
+                if fila2[r]!="":
+                    movimiento = True
                 fila3[r], fila2[r] = fila2[r], ""
             if fila2[r] == "":
+                if fila1[r] !="":
+                    movimiento = True
                 fila2[r], fila1[r] = fila1[r], ""
+    return movimiento
 
+def validacion_movimientos(cond1,cond2,mov):
+    pro = False
+    if cond1 == True or cond2 == True:
+        mov = mov + 1
+        pro = True
+    vacias(tablero,mov)
+    if pro == True:
+        aparicion(tablero)
+    return mov
+
+def vacias(tablero,mov):
+    lista = []
+    vacias = 0
+    for c in range(4):
+        for a in range(4):
+            if tablero[c][a] == "":
+                vacias = vacias+1
+            elif tablero[c][a] != "":
+                lista.append(tablero[c][a])
+            elif tablero[c][a] == 2048:
+                print("Juego terminado")
+                print("Movimientos Totales: ", mov)
+                print("Número mayor obtenido: ", lista)
+                mostrar_menu()
+    mayor = max(lista)
+    if vacias == 0:
+        print("Juego terminado")
+        print("Movimientos Totales: ", mov-1)
+        print("Número mayor obtenido: ", mayor)
+        mostrar_menu()
+    print("Movimiento # " ,mov)
+    print("Número mayor: ", mayor)
+    print("Casillas vacías: ", vacias) 
+    
 def aparicion(tablero):
     while True:
         posf, posc = random.randint(0, 3), random.randint(0, 3)
@@ -160,28 +206,30 @@ def aparicion(tablero):
             break
 
 def teclas():
+    mov = 0
     while True:
         tecla = input("Movimiento (a=izquierda, d=derecha, w=arriba, s=abajo, q=salir): ")
         if tecla == "q":
             print("¡Juego terminado!")
             return
         elif tecla == "a":
-            mov_izquierda(tablero)
-            sumas_columnas(tablero)
+            cond1 = mov_izquierda(tablero)
+            cond2 = sumas_columnas(tablero)
             mov_izquierda(tablero)
         elif tecla == "d":
-            mov_derecha(tablero)
-            sumas_columnas(tablero)
+            cond1 = mov_derecha(tablero)
+            cond2 = sumas_columnas(tablero)
             mov_derecha(tablero)
         elif tecla == "w":
-            mov_arriba(fila1, fila2, fila3, fila4)
-            sumas_filas(fila1, fila2, fila3, fila4)
+            cond1 = mov_arriba(fila1, fila2, fila3, fila4)
+            cond2 = sumas_filas(fila1, fila2, fila3, fila4)
             mov_arriba(fila1, fila2, fila3, fila4)
         elif tecla == "s":
+            cond1 = mov_abajo(fila1, fila2, fila3, fila4)
+            cond2 = sumas_filas(fila1, fila2, fila3, fila4)
             mov_abajo(fila1, fila2, fila3, fila4)
-            sumas_filas(fila1, fila2, fila3, fila4)
-            mov_abajo(fila1, fila2, fila3, fila4)
-        aparicion(tablero)
+
+        mov = validacion_movimientos(cond1,cond2,mov)
         mostrar_tablero(tablero)
 
 def modo_individual():
