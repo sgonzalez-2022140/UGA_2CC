@@ -41,6 +41,7 @@
 """
 import tkinter as tk
 import random
+import copy
 
 # Inicializar tablero global
 tablero = [["" for _ in range(4)] for _ in range(4)]
@@ -185,14 +186,17 @@ def vacias(tablero,mov):
                 lista.append(tablero[c][a])
             elif tablero[c][a] == 2048:
                 print("Juego terminado")
-                print("Movimientos Totales: ", mov)
-                print("Número mayor obtenido: ", lista)
+                #Incovar al tablero
+                mostrar_tablero_final_bonito(tablero, puntaje=mov, mayor=max(lista))
                 mostrar_menu()
     mayor = max(lista)
+    #Para que se mire bonito
     if vacias == 0:
         print("Juego terminado")
         print("Movimientos Totales: ", mov-1)
         print("Número mayor obtenido: ", mayor)
+        mostrar_tablero_final_bonito(tablero, puntaje=mov-1, mayor=mayor)  
+        return
         mostrar_menu()
     print("Movimiento # " ,mov)
     print("Número mayor: ", mayor)
@@ -204,6 +208,27 @@ def aparicion(tablero):
         if tablero[posf][posc] == "":
             tablero[posf][posc] = random.choice([2, 4])
             break
+
+# Ignorar el nombre XD
+def mostrar_tablero_final_bonito(tablero, puntaje, mayor):
+    print("\n" + "-" * 30)
+    print("|{:^28}|".format(" FIN DEL JUEGO "))
+    print("-" * 30)
+    print("|{:^28}|".format(f"Puntaje total: {puntaje}"))
+    print("|{:^28}|".format(f"Mayor número: {mayor}"))
+    print("-" * 30)
+    print("|{:^28}|".format("¡Gracias por jugar!"))
+    print("-" * 30 + "\n")
+
+    # Mostrar tablero con formato bonito
+    print("+" + "-------+" * 4)
+    for fila in tablero:
+        fila_str = "|"
+        for celda in fila:
+            valor = celda if celda != "" else " "
+            fila_str += f"{valor:^7}|"
+        print(fila_str)
+        print("+" + "-------+" * 4)
 
 def teclas():
     mov = 0
@@ -237,8 +262,97 @@ def modo_individual():
     mostrar_tablero(tablero)
     teclas()
 
+
+# ----------------------------------------------
+#              Jugador vs Jugador   
+# ----------------------------------------------
+
+# Necesiamos comprar los puntajes de ambos lados asi y guardarlos 
+
+
+# Reutilizamos 
+def jugar_turno(tablero_inicial, jugador):
+    tablero_jugador = copy.deepcopy(tablero_inicial)
+    fila1, fila2, fila3, fila4 = tablero_jugador[0], tablero_jugador[1], tablero_jugador[2], tablero_jugador[3]
+    mov = 0
+    while True:
+        mostrar_tablero(tablero_jugador)
+        tecla = input(f"{jugador} - Movimiento (a=izquierda, d=derecha, w=arriba, s=abajo, q=salir): ").lower()
+        if tecla == "q":
+            break
+        elif tecla == "a":
+            cond1 = mov_izquierda(tablero_jugador)
+            cond2 = sumas_columnas(tablero_jugador)
+            mov_izquierda(tablero_jugador)
+        elif tecla == "d":
+            cond1 = mov_derecha(tablero_jugador)
+            cond2 = sumas_columnas(tablero_jugador)
+            mov_derecha(tablero_jugador)
+        elif tecla == "w":
+            cond1 = mov_arriba(fila1, fila2, fila3, fila4)
+            cond2 = sumas_filas(fila1, fila2, fila3, fila4)
+            mov_arriba(fila1, fila2, fila3, fila4)
+        elif tecla == "s":
+            cond1 = mov_abajo(fila1, fila2, fila3, fila4)
+            cond2 = sumas_filas(fila1, fila2, fila3, fila4)
+            mov_abajo(fila1, fila2, fila3, fila4)
+        else:
+            print("Movimiento inválido.")
+            continue
+        if cond1 or cond2:
+            aparicion(tablero_jugador)
+            mov += 1
+        # Verifica si está lleno o alcanzó 2048 (usa vacías)
+        lista = [tablero_jugador[f][c] for f in range(4) for c in range(4) if tablero_jugador[f][c] != ""]
+        mayor = max(lista) if lista else 0
+        vacias = sum(1 for f in range(4) for c in range(4) if tablero_jugador[f][c] == "")
+        
+
+        if vacias == 0 or mayor >= 2048:
+            break
+
+    # Mostrar resumen final con formato bonito:
+    print("\n" + "-" * 30)
+    print("|{:^28}|".format(f" FIN DEL TURNO DE {jugador} "))
+    print("-" * 30)
+    print("|{:^28}|".format(f"Movimientos: {mov}"))
+    print("|{:^28}|".format(f"Mayor número: {mayor}"))
+    print("|{:^28}|".format(f"Casillas vacías: {vacias}"))
+    print("-" * 30)
+    print("|{:^28}|".format("¡Gracias por jugar!"))
+    print("-" * 30 + "\n")
+    
+    return mov, mayor
+
+
 def modo_multijugador():
-    pass
+    generar_tablero_inicial()
+    tablero_inicial = copy.deepcopy(tablero)
+    print("Configuración inicial:")
+    mostrar_tablero(tablero_inicial)
+    primer_jugador = random.choice(["Jugador 1", "Jugador 2"])
+    segundo_jugador = "Jugador 2" if primer_jugador == "Jugador 1" else "Jugador 1"
+    print(f"{primer_jugador} empieza.\n")
+    
+    mov1, mayor1 = jugar_turno(tablero_inicial, primer_jugador)
+    mov2, mayor2 = jugar_turno(tablero_inicial, segundo_jugador)
+    
+    print("\nResultados finales:")
+    print(f"{primer_jugador} - movimientos: {mov1}, mayor: {mayor1}")
+    print(f"{segundo_jugador} - movimientos: {mov2}, mayor: {mayor2}")
+    
+    if mayor1 > mayor2:
+        print(f"¡{primer_jugador} gana!")
+    elif mayor2 > mayor1:
+        print(f"¡{segundo_jugador} gana!")
+    else:
+        if mov1 < mov2:
+            print(f"¡{primer_jugador} gana por menos movimientos!")
+        elif mov2 < mov1:
+            print(f"¡{segundo_jugador} gana por menos movimientos!")
+        else:
+            print("¡Empate total!")
+
 
 def modo_maquina():
     pass
@@ -249,6 +363,7 @@ def manejar_modo(modo):
         modo_individual()
     elif modo == 2:
         print("Modo Jugador vs Jugador")
+        modo_multijugador()
     elif modo == 3:
         print("Modo Jugador vs Máquina")
 
