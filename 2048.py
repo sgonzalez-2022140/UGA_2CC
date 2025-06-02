@@ -233,10 +233,13 @@ def mostrar_tablero_final_bonito(tablero, puntaje, mayor):
 def teclas():
     mov = 0
     while True:
-        tecla = input("Movimiento (a=izquierda, d=derecha, w=arriba, s=abajo, q=salir): ")
+        tecla = input("Movimiento (a=izquierda, d=derecha, w=arriba, s=abajo, q=salir, h=ayuda): ")
         if tecla == "q":
             print("¡Juego terminado!")
             return
+        elif tecla == "h":
+            mostrar_ayuda()
+            continue
         elif tecla == "a":
             cond1 = mov_izquierda(tablero)
             cond2 = sumas_columnas(tablero)
@@ -277,7 +280,7 @@ def jugar_turno(tablero_inicial, jugador):
     mov = 0
     while True:
         mostrar_tablero(tablero_jugador)
-        tecla = input(f"{jugador} - Movimiento (a=izquierda, d=derecha, w=arriba, s=abajo, q=salir): ").lower()
+        tecla = input(f"{jugador} - Movimiento (a=izquierda, d=derecha, w=arriba, s=abajo, q=salir, h=ayuda): ").lower()
         if tecla == "q":
             break
         elif tecla == "a":
@@ -354,6 +357,43 @@ def modo_multijugador():
             print("¡Empate total!")
 
 
+# ----------------------------------------------
+#              Maquina vs Jugador   
+# ----------------------------------------------
+#Aun falta implementarlo bien
+def modo_maquina():
+    generar_tablero_inicial()
+    tablero_inicial = copy.deepcopy(tablero)
+    print("Configuración inicial:")
+    mostrar_tablero(tablero_inicial)
+
+    primero = random.choice(["Jugador", "Máquina"])
+    segundo = "Máquina" if primero == "Jugador" else "Jugador"
+    print(f"{primero} empieza.\n")
+
+    if primero == "Jugador":
+        mov1, mayor1 = jugar_turno(tablero_inicial, "Jugador")
+        mov2, mayor2 = jugar_turno(tablero_inicial, "Máquina")
+    else:
+        mov1, mayor1 = jugar_turno(tablero_inicial, "Máquina")
+        mov2, mayor2 = jugar_turno(tablero_inicial, "Jugador")
+
+    print("\nResultados finales:")
+    print(f"{primero} - movimientos: {mov1}, mayor: {mayor1}")
+    print(f"{segundo} - movimientos: {mov2}, mayor: {mayor2}")
+
+    if mayor1 > mayor2:
+        print(f"¡{primero} gana!")
+    elif mayor2 > mayor1:
+        print(f"¡{segundo} gana!")
+    else:
+        if mov1 < mov2:
+            print(f"¡{primero} gana por menos movimientos!")
+        elif mov2 < mov1:
+            print(f"¡{segundo} gana por menos movimientos!")
+        else:
+            print("¡Empate total!")
+
 def modo_maquina():
     pass
 
@@ -366,6 +406,31 @@ def manejar_modo(modo):
         modo_multijugador()
     elif modo == 3:
         print("Modo Jugador vs Máquina")
+        modo_maquina() 
+
+
+#PTS EXTRA 😎
+#Instrucciones del juego
+def mostrar_ayuda():
+    print("\n=== Instrucciones del juego ===")
+    print("Objetivo: Alcanzar 2048 sumando casillas con números iguales.")
+    print("Controles:")
+    print("- W: Mover hacia arriba")
+    print("- A: Mover hacia la izquierda")
+    print("- S: Mover hacia abajo")
+    print("- D: Mover hacia la derecha")
+    print("- H: Mostrar esta ayuda")
+    print("- R: Reproducir movimientos (replay)")
+    print("- Q: Salir del juego")
+    print("==============================")
+    print("¡Disfruta del juego!")
+    print("==============================\n")
+
+
+#Sistema de replay
+movimientos_replay = []
+#Aun me falta pensarla :V ya que no se como guardar los movimientos
+
 
 def mostrar_menu():
     ventana = tk.Tk()
