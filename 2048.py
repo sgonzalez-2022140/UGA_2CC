@@ -39,9 +39,13 @@
     - Botón de Ayuda: Mostrar instrucciones del juego
     - Opcion de retroceso (Undo)
 """
+# Importaciones
 import tkinter as tk
 import random
 import copy
+#Para el modo maquina
+import time
+
 
 # Inicializar tablero global
 tablero = [["" for _ in range(4)] for _ in range(4)]
@@ -360,42 +364,169 @@ def modo_multijugador():
 # ----------------------------------------------
 #              Maquina vs Jugador   
 # ----------------------------------------------
-#Aun falta implementarlo bien
+
+# Prueba No.5 de algoritmo de deteccion de movimientos
+def decidir_mejor_movimiento(tablero):
+    """
+    Determina el mejor movimiento que puede hacer la máquina evaluando todas las opciones (a, d, w, s) usando una heurística simple.
+    1. Copia el tablero original para no modificarlo.
+    2. Simula cada movimiento (izquierda, derecha, arriba, abajo).
+    3. Calcula si se realiza un movimiento válido y evalúa: número de casillas libres, mayor nómero alcanzado y el valor superior izquierda (numeros grandes)
+    4 Selecciona el movimiento con la mayor puntuación.
+    """
+    movimientos = ["a", "d", "w", "s"]
+    heuristicas = {}
+
+    for mov in movimientos:
+        tablero_simulado = copy.deepcopy(tablero)
+        fila1, fila2, fila3, fila4 = tablero_simulado[0], tablero_simulado[1], tablero_simulado[2], tablero_simulado[3]
+        movimiento_realizado = False
+
+        if mov == "a":
+            movimiento_realizado = mov_izquierda(tablero_simulado)
+            movimiento_realizado |= sumas_columnas(tablero_simulado)
+        elif mov == "d":
+            movimiento_realizado = mov_derecha(tablero_simulado)
+            movimiento_realizado |= sumas_columnas(tablero_simulado)
+        elif mov == "w":
+            movimiento_realizado = mov_arriba(fila1, fila2, fila3, fila4)
+            movimiento_realizado |= sumas_filas(fila1, fila2, fila3, fila4)
+        elif mov == "s":
+            movimiento_realizado = mov_abajo(fila1, fila2, fila3, fila4)
+            movimiento_realizado |= sumas_filas(fila1, fila2, fila3, fila4)
+
+        if not movimiento_realizado:
+            heuristicas[mov] = (-1000, "Movimiento inválido")
+            continue
+
+        vacias = sum(1 for f in range(4) for c in range(4) if tablero_simulado[f][c] == "")
+        mayor = max([tablero_simulado[f][c] for f in range(4) for c in range(4) if tablero_simulado[f][c] != ""], default=0)
+        esquina_valor = tablero_simulado[0][0] if tablero_simulado[0][0] != "" else 0
+
+        puntuacion = vacias * 5 + mayor + esquina_valor * 2
+
+        heuristicas[mov] = (puntuacion, mov)  # Guardamos solo el movimiento, lo demás no importa
+
+    mejor_mov, _ = max(heuristicas.items(), key=lambda x: x[1][0])
+
+    # Razones detalladas para cada movimiento
+    if mejor_mov == "a":
+        razon = "La máquina eligió A (izquierda) porque hay más espacio libre para moverse."
+    elif mejor_mov == "d":
+        razon = "La máquina eligió D (derecha) porque hay números grandes acumulados a la derecha."
+    elif mejor_mov == "w":
+        razon = "La máquina eligió W (arriba) porque puede combinar y sumar más números."
+    elif mejor_mov == "s":
+        razon = "La máquina eligió S (abajo) porque puede sumar números en esa dirección."
+
+    print(f"\n{razon}\n")
+    return mejor_mov
+
+
+
+def jugar_turno_maquina(tablero_inicial):
+    """
+    Simula el turno completo de la máquina. La máquina hace movimientos automáticos hasta que no puede más o alcanza 2048.
+    1. Copia el tablero inicial.
+    2. Hace un bucle infinito el cual muestra el tablero, usa la logica de decidir_mejor_movimiento y cada movimiento genera una pausa de 2 segs
+    3. Cuenta los movimientos realizados y el mayor número alcanzado.
+    """
+    
+    
+    tablero_jugador = copy.deepcopy(tablero_inicial)
+    fila1, fila2, fila3, fila4 = tablero_jugador[0], tablero_jugador[1], tablero_jugador[2], tablero_jugador[3]
+    mov = 0
+
+    while True:
+        mostrar_tablero(tablero_jugador)
+        tecla = decidir_mejor_movimiento(tablero_jugador)
+        if tecla is None:
+            print("¡La máquina no puede mover más!")
+            break
+        print(f"Máquina decide: {tecla.upper()}")
+        
+        time.sleep(2)  # Pausa de 2 segundos entre movimientos
+
+        if tecla == "a":
+            mov_izquierda(tablero_jugador)
+            sumas_columnas(tablero_jugador)
+            mov_izquierda(tablero_jugador)
+        elif tecla == "d":
+            mov_derecha(tablero_jugador)
+            sumas_columnas(tablero_jugador)
+            mov_derecha(tablero_jugador)
+        elif tecla == "w":
+            mov_arriba(fila1, fila2, fila3, fila4)
+            sumas_filas(fila1, fila2, fila3, fila4)
+            mov_arriba(fila1, fila2, fila3, fila4)
+        elif tecla == "s":
+            mov_abajo(fila1, fila2, fila3, fila4)
+            sumas_filas(fila1, fila2, fila3, fila4)
+            mov_abajo(fila1, fila2, fila3, fila4)
+
+        aparicion(tablero_jugador)
+        mov += 1
+
+        lista = [tablero_jugador[f][c] for f in range(4) for c in range(4) if tablero_jugador[f][c] != ""]
+        mayor = max(lista) if lista else 0
+        vacias = sum(1 for f in range(4) for c in range(4) if tablero_jugador[f][c] == "")
+        
+        if vacias == 0 or mayor >= 2048:
+            break
+
+    print(f"Máquina termina con {mov} movimientos, mayor: {mayor}")
+    return mov, mayor
+
+
+def modo_maquina_autonomo():
+    # Modo automático donde la máquina juega sola desde un tablero inicial y muestra los resultados al final.
+    
+    generar_tablero_inicial()
+    tablero_inicial = copy.deepcopy(tablero)
+    print("Configuración inicial:")
+    mostrar_tablero(tablero_inicial)
+    print("La máquina juega sola...\n")
+    time.sleep(1)
+
+    mov, mayor = jugar_turno_maquina(tablero_inicial)
+
+    print(f"\nResultados finales:")
+    print(f"Máquina - movimientos: {mov}, mayor: {mayor}")
+
+
+# Modo Jugador vs Máquina. La máquina juega su turno primero y luego se da al jugador la oportunidad de jugar sobre el mismo tablero.
 def modo_maquina():
     generar_tablero_inicial()
     tablero_inicial = copy.deepcopy(tablero)
     print("Configuración inicial:")
     mostrar_tablero(tablero_inicial)
 
-    primero = random.choice(["Jugador", "Máquina"])
-    segundo = "Máquina" if primero == "Jugador" else "Jugador"
-    print(f"{primero} empieza.\n")
+    # Empieza la máquina
+    print("\n=== Turno de la MÁQUINA ===")
+    mov_maquina, mayor_maquina = jugar_turno_maquina(tablero_inicial)
 
-    if primero == "Jugador":
-        mov1, mayor1 = jugar_turno(tablero_inicial, "Jugador")
-        mov2, mayor2 = jugar_turno(tablero_inicial, "Máquina")
-    else:
-        mov1, mayor1 = jugar_turno(tablero_inicial, "Máquina")
-        mov2, mayor2 = jugar_turno(tablero_inicial, "Jugador")
+    # Ahora turno del jugador
+    print("\n=== Turno del JUGADOR ===")
+    mov_jugador, mayor_jugador = jugar_turno(tablero_inicial, "Jugador")
 
+    # Mostrar resultados
     print("\nResultados finales:")
-    print(f"{primero} - movimientos: {mov1}, mayor: {mayor1}")
-    print(f"{segundo} - movimientos: {mov2}, mayor: {mayor2}")
+    print(f"Máquina - Movimientos: {mov_maquina}, Mayor número: {mayor_maquina}")
+    print(f"Jugador - Movimientos: {mov_jugador}, Mayor número: {mayor_jugador}")
 
-    if mayor1 > mayor2:
-        print(f"¡{primero} gana!")
-    elif mayor2 > mayor1:
-        print(f"¡{segundo} gana!")
+    # Determinar quién gana
+    if mayor_maquina > mayor_jugador:
+        print("¡La máquina gana!")
+    elif mayor_jugador > mayor_maquina:
+        print("¡El jugador gana!")
     else:
-        if mov1 < mov2:
-            print(f"¡{primero} gana por menos movimientos!")
-        elif mov2 < mov1:
-            print(f"¡{segundo} gana por menos movimientos!")
+        if mov_maquina < mov_jugador:
+            print("¡La máquina gana por menos movimientos!")
+        elif mov_jugador < mov_maquina:
+            print("¡El jugador gana por menos movimientos!")
         else:
             print("¡Empate total!")
 
-def modo_maquina():
-    pass
 
 def manejar_modo(modo):
     if modo == 1:
@@ -405,7 +536,7 @@ def manejar_modo(modo):
         print("Modo Jugador vs Jugador")
         modo_multijugador()
     elif modo == 3:
-        print("Modo Jugador vs Máquina")
+        print("Modo Jugador vs Máquina (con turno humano)")
         modo_maquina() 
 
 
